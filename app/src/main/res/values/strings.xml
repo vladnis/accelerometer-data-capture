@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">DataCapture</string>
+    <string name="new_capture">New capture</string>
+    <string name="selector_fail">Invalid scenario selected</string>
+    <string name="start_capture">Start capture</string>
+    <string name="stop_capture">Stop capture</string>
+</resources>
