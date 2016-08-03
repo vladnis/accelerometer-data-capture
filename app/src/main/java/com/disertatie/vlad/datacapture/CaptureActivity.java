@@ -6,9 +6,11 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Environment;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import java.io.File;
@@ -30,6 +32,9 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
 
     private int scenario = -1;
 
+    private static final String TAG = "MyActivity";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,32 +49,56 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
                     .show();
         }
 
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
     }
 
     public void onClickStartCapture(View view) {
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        String filename = MainActivity.scenariosFilenames[this.scenario].toString();
+        if (!isExternalStorageReadable() || !isExternalStorageWritable()) {
+            Snackbar.make(findViewById(R.id.captureCoordinatorLayout), "External mount failed",
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            return;
+        }
+
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        final long now = mSensorTimeStamp + (System.nanoTime() - mCpuTimeStamp);
+
+        String filename = MainActivity.scenariosFilenames[this.scenario].toString() + now;
+
+        File file = new File(this.getExternalFilesDir(Environment.DIRECTORY_DCIM), filename);
+
+        Log.d("test", file.getPath());
 
         try {
-            outputStream = openFileOutput(filename, MODE_PRIVATE);
+            outputStream = new FileOutputStream(file);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
+
+        Snackbar.make(findViewById(R.id.captureCoordinatorLayout), filename,
+                Snackbar.LENGTH_SHORT)
+                .show();
     }
 
 
     public void onClickStopCapture(View view) {
 
         try {
+            outputStream.flush();
             outputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         mSensorManager.unregisterListener(this);
+
+        Snackbar.make(findViewById(R.id.captureCoordinatorLayout), "Finished capture",
+                Snackbar.LENGTH_SHORT)
+                .show();
     }
 
     public void onSensorChanged(SensorEvent event){
@@ -93,7 +122,7 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
 
         final long now = mSensorTimeStamp + (System.nanoTime() - mCpuTimeStamp);
 
-        String line = linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2] + " " + now;
+        String line = linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2] + " " + now + "\n";
 
         try {
             outputStream.write(line.getBytes());
@@ -101,11 +130,32 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
             e.printStackTrace();
         }
 
+        //Log.d(TAG, linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2]);
+
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
     }
 
 }

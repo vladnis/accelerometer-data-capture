@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setItems(MainActivity.scenarios, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Intent intent = new Intent();
+                Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
                 intent.putExtra(CaptureActivity.SCENARIO_TAG, which);
                 startActivity(intent);
             }
