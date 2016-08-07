@@ -14,8 +14,9 @@
         <com.androidplot.xy.XYPlot
             style="@style/APDefacto.Dark"
             android:id="@+id/plot"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="0dp"
             ap:label="A Simple XY Plot"
             ap:rangeLabel="range"
             ap:domainLabel="domain"/>

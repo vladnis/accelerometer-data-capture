@@ -2,6 +2,7 @@ package com.disertatie.vlad.datacapture;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -12,6 +13,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
+import com.androidplot.xy.BoundaryMode;
+import com.androidplot.xy.LineAndPointFormatter;
+import com.androidplot.xy.SimpleXYSeries;
+import com.androidplot.xy.XYPlot;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,9 +36,19 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
 
     FileOutputStream outputStream;
 
+    private XYPlot plot;
+
     private int scenario = -1;
 
     private static final String TAG = "MyActivity";
+
+    private SimpleXYSeries OZSeries = null;
+    private SimpleXYSeries OXSeries = null;
+    private SimpleXYSeries OYSeries = null;
+
+
+    private static final int HISTORY_SIZE = 100;
+
 
 
     @Override
@@ -50,6 +66,22 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
         }
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        // initialize our XYPlot reference:
+        plot = (XYPlot) findViewById(R.id.plot);
+        plot.setRangeBoundaries(-50, 50, BoundaryMode.FIXED);
+        OZSeries = new SimpleXYSeries("OZ");
+        OZSeries.useImplicitXVals();
+
+        OXSeries = new SimpleXYSeries("OX");
+        OXSeries.useImplicitXVals();
+
+        OYSeries = new SimpleXYSeries("OY");
+        OYSeries.useImplicitXVals();
+
+        plot.addSeries(OZSeries, new LineAndPointFormatter(Color.GREEN, Color.GREEN, Color.TRANSPARENT, null));
+        plot.addSeries(OXSeries, new LineAndPointFormatter(Color.YELLOW, Color.YELLOW, Color.TRANSPARENT, null));
+        plot.addSeries(OYSeries, new LineAndPointFormatter(Color.BLUE, Color.BLUE, Color.TRANSPARENT, null));
 
     }
 
@@ -80,7 +112,7 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
 
         Snackbar.make(findViewById(R.id.captureCoordinatorLayout), filename,
-                Snackbar.LENGTH_SHORT)
+                1)
                 .show();
     }
 
@@ -97,8 +129,9 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
         mSensorManager.unregisterListener(this);
 
         Snackbar.make(findViewById(R.id.captureCoordinatorLayout), "Finished capture",
-                Snackbar.LENGTH_SHORT)
+                1)
                 .show();
+
     }
 
     public void onSensorChanged(SensorEvent event){
@@ -130,7 +163,25 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
             e.printStackTrace();
         }
 
-        //Log.d(TAG, linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2]);
+        if (OZSeries.size() > HISTORY_SIZE) {
+            OZSeries.removeFirst();
+        }
+
+
+        if (OXSeries.size() > HISTORY_SIZE) {
+            OXSeries.removeFirst();
+        }
+
+
+        if (OYSeries.size() > HISTORY_SIZE) {
+            OYSeries.removeFirst();
+        }
+
+        OZSeries.addLast(null, linear_acceleration[0]);
+        OYSeries.addLast(null, linear_acceleration[2]);
+        OXSeries.addLast(null, linear_acceleration[1]);
+
+        plot.redraw();
 
     }
 
