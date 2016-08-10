@@ -21,19 +21,28 @@
             ap:rangeLabel="range"
             ap:domainLabel="domain"/>
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/start_capture"
-        android:id="@+id/startCaptureButton"
-        android:onClick="onClickStartCapture" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/start_burst"
+            android:id="@+id/startBurstMode"
+            android:onClick="onClickBurstMode" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/stop_capture"
-        android:id="@+id/stopCaptureButton"
-        android:onClick="onClickStopCapture" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/stop_capture"
+            android:id="@+id/stopCaptureButton"
+            android:onClick="onClickStopCapture" />
+
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/start_capture"
+            android:id="@+id/startCaptureButton"
+            android:onClick="onClickStartCapture" />
+
 
     </LinearLayout>
 

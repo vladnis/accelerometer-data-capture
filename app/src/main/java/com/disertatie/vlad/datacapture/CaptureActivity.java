@@ -25,11 +25,14 @@ import java.io.IOException;
 
 public class CaptureActivity extends AppCompatActivity implements SensorEventListener {
     static final String SCENARIO_TAG = "com.disertatie.vlad.SCENARIO";
-    private double[] gravity = new double[3];
-    private double[] linear_acceleration = new double[3];
+    private float[] gravity = new float[3];
+    private float[] linear_acceleration = new float[4];
 
     private SensorManager mSensorManager;
+
     private Sensor mAccelerometer;
+    private Sensor gravitySensor;
+    private Sensor mangnetoSensor;
 
     private long mSensorTimeStamp;
     private long mCpuTimeStamp;
@@ -37,6 +40,9 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
     FileOutputStream outputStream;
 
     private XYPlot plot;
+
+    private float[] gravityValues = null;
+    private float[] magneticValues = null;
 
     private int scenario = -1;
 
@@ -49,6 +55,11 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
 
     private static final int HISTORY_SIZE = 100;
 
+
+    final int STATUS_STOP = 0;
+    final int STATUS_RUNNING = 1;
+
+    private int status = STATUS_STOP;
 
 
     @Override
@@ -87,6 +98,13 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
 
     public void onClickStartCapture(View view) {
 
+        if (status != STATUS_STOP) {
+            Snackbar.make(findViewById(R.id.captureCoordinatorLayout), "Already running",
+                    1)
+                    .show();
+            return;
+        }
+
         if (!isExternalStorageReadable() || !isExternalStorageWritable()) {
             Snackbar.make(findViewById(R.id.captureCoordinatorLayout), "External mount failed",
                     Snackbar.LENGTH_SHORT)
@@ -95,6 +113,19 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
         }
 
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        if ((mangnetoSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)) != null) {
+            Log.d("test", "Magneto");
+        } else {
+            Log.e("test", "No Magneto");
+        }
+
+        if ((gravitySensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)) != null) {
+            Log.d("test", "Gravity");
+        } else {
+            Log.e("test", "No Gravity");
+        }
+
         final long now = mSensorTimeStamp + (System.nanoTime() - mCpuTimeStamp);
 
         String filename = MainActivity.scenariosFilenames[this.scenario].toString() + now;
@@ -110,14 +141,26 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
         }
 
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, gravitySensor, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mangnetoSensor, SensorManager.SENSOR_DELAY_UI);
 
         Snackbar.make(findViewById(R.id.captureCoordinatorLayout), filename,
                 1)
                 .show();
+
+        this.status = STATUS_RUNNING;
     }
 
 
     public void onClickStopCapture(View view) {
+
+        if (status != STATUS_RUNNING) {
+            Snackbar.make(findViewById(R.id.captureCoordinatorLayout), "Already stopped",
+                    1)
+                    .show();
+
+            return;
+        }
 
         try {
             outputStream.flush();
@@ -132,13 +175,24 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
                 1)
                 .show();
 
+        this.status = STATUS_STOP;
     }
 
-    public void onSensorChanged(SensorEvent event){
-        if (event.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
-            return;
+    public void onSensorChanged(SensorEvent event) {
 
-        final double alpha = 0.8;
+        if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
+            this.gravityValues = event.values;
+        }
+
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            this.magneticValues = event.values;
+        }
+
+        if (event.sensor.getType() != Sensor.TYPE_ACCELEROMETER || this.magneticValues == null || this.gravityValues == null) {
+            return;
+        }
+
+        final float alpha = 0.8f;
 
         // Isolate the force of gravity with the low-pass filter.
         gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0]; // Y
@@ -149,6 +203,20 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
         linear_acceleration[0] = event.values[0] - gravity[0];
         linear_acceleration[1] = event.values[1] - gravity[1];
         linear_acceleration[2] = event.values[2] - gravity[2];
+        linear_acceleration[3] = 0;
+
+
+        float[] R = new float[16], I = new float[16], earthAcc = new float[16];
+        SensorManager.getRotationMatrix(R, I, this.gravityValues, magneticValues);
+        float[] inv = new float[16];
+
+        android.opengl.Matrix.invertM(inv, 0, R, 0);
+        android.opengl.Matrix.multiplyMV(earthAcc, 0, inv, 0, linear_acceleration, 0);
+        Log.d("Acceleration", "Values: (" + earthAcc[0] + ", " + earthAcc[1] + ", " + earthAcc[2] + ")");
+
+        linear_acceleration[0] = earthAcc[0];
+        linear_acceleration[1] = earthAcc[1];
+        linear_acceleration[2] = earthAcc[2];
 
         mSensorTimeStamp = event.timestamp;
         mCpuTimeStamp = System.nanoTime();
@@ -209,4 +277,12 @@ public class CaptureActivity extends AppCompatActivity implements SensorEventLis
         return false;
     }
 
+    public void onClickBurstMode(View view) {
+        if (status == STATUS_RUNNING) {
+            this.onClickStopCapture(view);
+            this.onClickStartCapture(view);
+        } else {
+            this.onClickStartCapture(view);
+        }
+    }
 }

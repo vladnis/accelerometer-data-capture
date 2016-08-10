@@ -16,8 +16,6 @@ set ylabel "Percentage covered"
 
 set  linetype 1 linewidth 1 pt 1 ps 0.5
 
-plot  "/home/vlad/AndroidStudioProjects/DataCapture/fileRetrivalScript/CapturedData/DCIM/continuous/1#stairs-up10919305169571" using 4:1 title '' with linespoints,\
-"/home/vlad/AndroidStudioProjects/DataCapture/fileRetrivalScript/CapturedData/DCIM/continuous/1#stairs-up10919305169571" using 4:2 title '' with linespoints, \
-"/home/vlad/AndroidStudioProjects/DataCapture/fileRetrivalScript/CapturedData/DCIM/continuous/1#stairs-up10919305169571" using 4:3 title '' with linespoints
+plot "5#walking77245056291029" using 4:2 title '' with linespoints
 
 unset output
