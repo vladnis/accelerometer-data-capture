@@ -20,7 +20,7 @@ import java.util.List;
 
 public class MainActivity extends Activity {
     public static CharSequence scenarios[] = new CharSequence[] {"Stairs up", "Stairs down", "Elevator up", "Elevator down", "Walking"};
-    public static CharSequence scenariosFilenames[] = new CharSequence[] {"stairs-up", "stairs-down", "elevator-up", "elevator-down", "walking"};
+    public static CharSequence scenariosFilenames[] = new CharSequence[] {"1#stairs-up-", "2#stairs-down-", "3#elevator-up-", "4#elevator-down-", "5#walking-"};
     ArrayAdapter<String> adapter;
 
 
