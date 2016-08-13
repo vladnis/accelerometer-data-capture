@@ -64,7 +64,7 @@ int main (int argc, const char * argv[])
 
     pipeline.setClassifier( hmm );
 
-    pipeline.train(trainingData, 2);
+    pipeline.train(trainingData, 20);
 
     //You can then get then get the accuracy of how well the pipeline performed during the k-fold cross validation testing
     double accuracy = pipeline.getCrossValidationAccuracy();

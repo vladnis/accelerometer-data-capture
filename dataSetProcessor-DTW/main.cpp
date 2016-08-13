@@ -58,20 +58,18 @@ int main (int argc, const char * argv[])
 //    DoubleMovingAverageFilter filter( 1000, 3 );
 //    pipeline.setPreProcessingModule(filter);
 
-//    dtw.enableNullRejection( true );
+    dtw.enableNullRejection( true );
 
     //Set the null rejection coefficient to 3, this controls the thresholds for the automatic null rejection
 	//You can increase this value if you find that your real-time gestures are not being recognized
 	//If you are getting too many false positives then you should decrease this value
-//    dtw.setNullRejectionCoeff( 20 );
+    dtw.setNullRejectionCoeff( 5 );
 //    dtw.enableTrimTrainingData(true, 0.1, 90);
 //    dtw.setOffsetTimeseriesUsingFirstSample(true);
 
-    dtw.enableTrimTrainingData(true, 0.1, 90);
-
     pipeline.setClassifier( dtw );
 
-    pipeline.train(trainingData, 2);
+    pipeline.train(trainingData, 5);
 
     //You can then get then get the accuracy of how well the pipeline performed during the k-fold cross validation testing
     double accuracy = pipeline.getCrossValidationAccuracy();

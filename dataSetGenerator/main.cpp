@@ -40,11 +40,11 @@ int main (int argc, const char * argv[])
 	GestureRecognitionPipeline pipeline;
     TimeSeriesClassificationData trainingData;      //This will store our training data
 
-	trainingData.setNumDimensions( 3 );
+	trainingData.setNumDimensions( 1 );
 
 	DIR *dir;
 	struct dirent *ent;
-	string dirPath = "/home/vlad/AndroidStudioProjects/DataCapture/fileRetrivalScript/CapturedData/DCIM/segmented";
+	string dirPath = "/home/vlad/AndroidStudioProjects/DataCapture/fileRetrivalScript/CapturedData/DCIM";
 
 	if ((dir = opendir (dirPath.c_str())) == NULL) {
 		 /* could not open directory */
@@ -65,6 +65,10 @@ int main (int argc, const char * argv[])
 
 		UINT classLabel = atoi(classLabelString.c_str());
 
+		if (classLabel != 1 && classLabel != 2 && classLabel != 5) {
+			continue;
+		}
+
 		printf("Processing filename: %s Label: %d\n", filename.c_str(), classLabel);
 
 		string filePath = dirPath + "/" + filename;
@@ -80,10 +84,16 @@ int main (int argc, const char * argv[])
 
 		double x, y, z;
 		while (infile >> x >> y >> z) {
-			VectorDouble sample(3);
-			sample[0] = x;
-			sample[1] = y;
-			sample[2] = z;
+			VectorDouble sample(1);
+//			sample[0] = x;
+			if (y > 5.0) {
+				y = 5.0;
+			}
+			if (y < -5.0) {
+				y = -5.0;
+			}
+			sample[0] = y;
+//			sample[2] = z;
 
 	        timeseries.push_back( sample );
 		}
